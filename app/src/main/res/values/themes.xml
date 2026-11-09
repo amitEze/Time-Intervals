@@ -1,0 +1,5 @@
+<resources>
+    <!-- Window theme only; the app's colors come from Compose (ui/App.kt). -->
+    <style name="Theme.IntervalTimer" parent="android:Theme.Material.Light.NoActionBar" />
+    <color name="ic_launcher_background">#E53935</color>
+</resources>
