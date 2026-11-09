@@ -58,18 +58,16 @@ jobs:
             echo "Using the committed keystore"
           fi
 
-      # Downloads Gradle itself; retried because the download server
-      # sometimes times out.
+      # Gradle steps are retried up to 3 times, because download servers
+      # sometimes time out. A real code error fails all 3 tries.
       - name: Download Gradle
-        run: |
-          for i in 1 2 3 4; do ./gradlew --no-daemon --version && exit 0; sleep $((i * 15)); done
-          exit 1
+        run: ./retry.sh ./gradlew --no-daemon --version
 
       - name: Run unit tests
-        run: ./gradlew --no-daemon testDebugUnitTest
+        run: ./retry.sh ./gradlew --no-daemon testDebugUnitTest
 
       - name: Build release APK
-        run: ./gradlew --no-daemon assembleRelease -PversionCode=$BUILD
+        run: ./retry.sh ./gradlew --no-daemon assembleRelease -PversionCode=$BUILD
 
       - name: Rename APK
         run: cp app/build/outputs/apk/release/app-release.apk "IntervalTimer-$VERSION.apk"
