@@ -8,9 +8,9 @@ import org.junit.Test
 class TimerEngineTest {
 
     private val stages = listOf(
-        Stage(StageType.WORK, 10, 1, 1, 1, 2),
-        Stage(StageType.REST, 5, 1, 1, 1, 2),
-        Stage(StageType.WORK, 10, 1, 1, 2, 2),
+        Stage(StageType.WORK, 10),
+        Stage(StageType.REST, 5),
+        Stage(StageType.WORK, 10),
     )
 
     private fun started(at: Long = 1000) = TimerEngine(stages).apply { start(at) }

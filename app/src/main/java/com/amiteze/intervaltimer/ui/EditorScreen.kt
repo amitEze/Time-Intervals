@@ -108,31 +108,8 @@ private fun OptionalStage(title: String, enabled: Boolean, seconds: Int, onEnabl
     }
 }
 
-@Composable
-private fun BlockCard(
-    index: Int, count: Int, block: Block,
-    onChange: (Block) -> Unit, onMove: (Int) -> Unit, onRemove: () -> Unit,
-) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Block ${index + 1}", style = MaterialTheme.typography.titleMedium)
-            Text("Work")
-            DurationField(block.workSec) { onChange(block.copy(workSec = it)) }
-            Text("Rest")
-            DurationField(block.restSec) { onChange(block.copy(restSec = it)) }
-            Text("Rounds")
-            Stepper(block.rounds, { onChange(block.copy(rounds = it)) })
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { onMove(-1) }, enabled = index > 0, modifier = Modifier.weight(1f).height(48.dp)) { Text("↑ Up") }
-                OutlinedButton(onClick = { onMove(1) }, enabled = index < count - 1, modifier = Modifier.weight(1f).height(48.dp)) { Text("↓ Down") }
-                OutlinedButton(onClick = onRemove, enabled = count > 1, modifier = Modifier.weight(1f).height(48.dp)) { Text("Remove") }
-            }
-        }
-    }
-}
-
 /** Returns a copy of the list with the item at [from] moved to [to]. */
-private fun <T> List<T>.move(from: Int, to: Int): List<T> {
+fun <T> List<T>.move(from: Int, to: Int): List<T> {
     if (to !in indices) return this
     return toMutableList().apply { add(to, removeAt(from)) }
 }

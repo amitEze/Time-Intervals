@@ -7,6 +7,7 @@ import com.amiteze.intervaltimer.data.Settings
 import com.amiteze.intervaltimer.data.Storage
 import com.amiteze.intervaltimer.model.Block
 import com.amiteze.intervaltimer.model.Workout
+import com.amiteze.intervaltimer.model.withNewIds
 import com.amiteze.intervaltimer.service.RunState
 import com.amiteze.intervaltimer.service.TimerService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +55,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val copy = w.copy(
             id = UUID.randomUUID().toString(),
             name = "${w.name} (copy)",
-            blocks = w.blocks.map { it.copy(id = UUID.randomUUID().toString()) },
+            blocks = w.blocks.map { it.withNewIds() },
         )
         val i = list.indexOfFirst { it.id == w.id }
         list.toMutableList().apply { add(i + 1, copy) }
@@ -68,14 +69,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun addBlock() = _draft.value?.let { d ->
         val last = d.blocks.lastOrNull() ?: Block()
-        updateDraft(d.copy(blocks = d.blocks + last.copy(id = UUID.randomUUID().toString())))
+        updateDraft(d.copy(blocks = d.blocks + last.withNewIds()))
     }
 
     fun saveDraft() {
         val d = _draft.value ?: return
         val clean = d.copy(
             name = d.name.ifBlank { "Workout" },
-            blocks = d.blocks.ifEmpty { listOf(Block()) }.map { it.copy(rounds = it.rounds.coerceAtLeast(1)) },
+            blocks = d.blocks.ifEmpty { listOf(Block()) }.map { b ->
+                b.copy(name = b.name.trim(), sets = b.sets.coerceAtLeast(1), stages = b.stages.ifEmpty { Block().stages })
+            },
         )
         saveAll { list ->
             if (list.any { it.id == clean.id }) list.map { if (it.id == clean.id) clean else it } else list + clean

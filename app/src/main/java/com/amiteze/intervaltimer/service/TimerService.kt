@@ -28,6 +28,7 @@ import com.amiteze.intervaltimer.model.Workout
 import com.amiteze.intervaltimer.timer.StageBuilder
 import com.amiteze.intervaltimer.timer.TimerEngine
 import com.amiteze.intervaltimer.timer.formatMmSs
+import com.amiteze.intervaltimer.timer.progressText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -244,9 +245,9 @@ class TimerService : Service() {
     private fun buildNotification(s: RunState): Notification {
         val stage = s.stage
         val title = if (stage == null) s.workoutName else
-            "${stage.type.label}  ${formatMmSs(s.stageRemainingMs)}" + if (s.paused) "  (paused)" else ""
+            "${stage.name}  ${formatMmSs(s.stageRemainingMs)}" + if (s.paused) "  (paused)" else ""
         val text = buildString {
-            if (stage != null && stage.round > 0) append("Round ${stage.round}/${stage.roundCount} · Block ${stage.block}/${stage.blockCount} · ")
+            if (stage != null && stage.set > 0) append(stage.progressText() + " · ")
             append("${formatMmSs(s.totalRemainingMs)} left")
         }
         val openApp = PendingIntent.getActivity(

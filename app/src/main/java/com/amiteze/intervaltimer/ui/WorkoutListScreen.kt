@@ -70,7 +70,7 @@ fun WorkoutListScreen(vm: MainViewModel) {
                         colors = CardDefaults.cardColors(containerColor = stageColor(run.stage?.type), contentColor = Color.White),
                     ) {
                         Text(
-                            "▶  ${run.workoutName}: ${run.stage?.type?.label ?: "Done"} ${formatMmSs(run.stageRemainingMs)} — tap to open",
+                            "▶  ${run.workoutName}: ${run.stage?.name ?: "Done"} ${formatMmSs(run.stageRemainingMs)} — tap to open",
                             modifier = Modifier.padding(16.dp),
                             fontWeight = FontWeight.Bold,
                         )
@@ -122,9 +122,11 @@ private fun WorkoutCard(w: Workout, onStart: () -> Unit, onEdit: () -> Unit, onC
     }
 }
 
-/** e.g. "5×3:00/1:00, 8×0:30/0:15 · total 30:45" */
+/** e.g. "5× (Fight 3:00, Rest 1:00), 8× (Burpees 0:30, Rest 0:15) · total 30:45" */
 private fun summary(w: Workout): String {
     fun t(sec: Int) = "%d:%02d".format(sec / 60, sec % 60)
-    val blocks = w.blocks.joinToString(", ") { "${it.rounds}×${t(it.workSec)}/${t(it.restSec)}" }
+    val blocks = w.blocks.joinToString(", ") { b ->
+        "${b.sets}× (" + b.stages.joinToString(", ") { "${it.name.ifBlank { if (it.rest) "Rest" else "Work" }} ${t(it.sec)}" } + ")"
+    }
     return "$blocks · total ${formatMmSs(StageBuilder.totalSec(w) * 1000L)}"
 }

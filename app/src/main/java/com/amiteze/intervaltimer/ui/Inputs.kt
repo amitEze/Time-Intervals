@@ -59,7 +59,7 @@ fun DurationField(seconds: Int, onChange: (Int) -> Unit) {
     }
 }
 
-/** Big − / + buttons around a number (used for rounds). */
+/** Big − / + buttons around a number (used for sets). */
 @Composable
 fun Stepper(value: Int, onChange: (Int) -> Unit, min: Int = 1, max: Int = 99) {
     Row(verticalAlignment = Alignment.CenterVertically) {

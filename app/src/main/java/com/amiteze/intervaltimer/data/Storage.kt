@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.amiteze.intervaltimer.model.Block
+import com.amiteze.intervaltimer.model.BlockStage
 import com.amiteze.intervaltimer.model.Workout
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -46,13 +47,29 @@ class Storage(context: Context) {
         Workout(
             name = "Boxing rounds + Tabata",
             warmupEnabled = true, warmupSec = 120,
-            blocks = listOf(Block(workSec = 180, restSec = 60, rounds = 5), Block(workSec = 30, restSec = 15, rounds = 8)),
+            blocks = listOf(
+                Block(name = "Boxing", sets = 5, stages = listOf(
+                    BlockStage(name = "Fight", sec = 180),
+                    BlockStage(name = "Rest", sec = 60, rest = true),
+                )),
+                Block(name = "Tabata", sets = 8, stages = listOf(
+                    BlockStage(name = "Burpees", sec = 30),
+                    BlockStage(name = "Rest", sec = 15, rest = true),
+                )),
+            ),
             cooldownEnabled = true, cooldownSec = 120,
         ),
         Workout(
-            name = "Tabata",
+            name = "Circuit",
             warmupEnabled = true, warmupSec = 10,
-            blocks = listOf(Block(workSec = 20, restSec = 10, rounds = 8)),
+            blocks = listOf(
+                Block(name = "Circuit", sets = 3, stages = listOf(
+                    BlockStage(name = "Squats", sec = 40),
+                    BlockStage(name = "Push-ups", sec = 40),
+                    BlockStage(name = "Plank", sec = 40),
+                    BlockStage(name = "Rest", sec = 60, rest = true),
+                )),
+            ),
         ),
     )
 }

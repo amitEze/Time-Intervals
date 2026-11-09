@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.amiteze.intervaltimer.service.TimerService
 import com.amiteze.intervaltimer.timer.formatMmSs
+import com.amiteze.intervaltimer.timer.progressText
+import androidx.compose.ui.text.style.TextAlign
 
 /** Full-screen countdown. The background color follows the stage. */
 @Composable
@@ -61,14 +63,11 @@ fun RunScreen(vm: MainViewModel) {
 
         Spacer(Modifier.height(16.dp))
         Text(
-            (stage?.type?.label ?: "") + if (s.paused) " (paused)" else "",
+            (stage?.name ?: "") + if (s.paused) " (paused)" else "",
             color = white, fontSize = 44.sp, fontWeight = FontWeight.Bold,
         )
-        if (stage != null && stage.round > 0) {
-            Text(
-                "Round ${stage.round}/${stage.roundCount}    Block ${stage.block}/${stage.blockCount}",
-                color = white, fontSize = 22.sp,
-            )
+        if (stage != null && stage.set > 0) {
+            Text(stage.progressText(), color = white, fontSize = 22.sp, textAlign = TextAlign.Center)
         }
 
         Spacer(Modifier.weight(1f))
@@ -77,7 +76,7 @@ fun RunScreen(vm: MainViewModel) {
             color = white, fontSize = 104.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, maxLines = 1,
         )
         Text("Total left  ${formatMmSs(s.totalRemainingMs)}", color = white, fontSize = 22.sp)
-        s.nextStage?.let { Text("Next: ${it.type.label} ${formatMmSs(it.durationMs)}", color = white.copy(alpha = 0.8f), fontSize = 18.sp) }
+        s.nextStage?.let { Text("Next: ${it.name} ${formatMmSs(it.durationMs)}", color = white.copy(alpha = 0.8f), fontSize = 18.sp) }
         Spacer(Modifier.weight(1f))
 
         val light = ButtonDefaults.buttonColors(containerColor = white, contentColor = Color.Black)

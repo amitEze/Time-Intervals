@@ -7,9 +7,10 @@ import com.amiteze.intervaltimer.model.Workout
  *
  * Rules:
  * - Start/End are added only when enabled and longer than 0 s.
- * - Each block adds Work (and Rest) for every round.
- * - The rest after the very last round of the last block is skipped.
- * - Stages of 0 s are skipped (e.g. a block with no rest).
+ * - Each block runs all its stages, in order, once per set.
+ * - Rest stages at the very end of the last set of the last block are
+ *   skipped (no point resting when the workout is over).
+ * - Stages of 0 s are skipped.
  */
 object StageBuilder {
     fun build(workout: Workout): List<Stage> {
@@ -18,15 +19,21 @@ object StageBuilder {
             stages += Stage(StageType.START, workout.warmupSec)
         }
 
-        val blocks = workout.blocks.filter { it.rounds > 0 }
-        blocks.forEachIndexed { b, block ->
-            for (r in 1..block.rounds) {
-                val isLastRoundOfLastBlock = b == blocks.lastIndex && r == block.rounds
-                if (block.workSec > 0) {
-                    stages += Stage(StageType.WORK, block.workSec, b + 1, blocks.size, r, block.rounds)
-                }
-                if (!isLastRoundOfLastBlock && block.restSec > 0) {
-                    stages += Stage(StageType.REST, block.restSec, b + 1, blocks.size, r, block.rounds)
+        val blocks = workout.blocks.filter { b -> b.sets > 0 && b.stages.any { it.sec > 0 } }
+        blocks.forEachIndexed { bi, block ->
+            val steps = block.stages.filter { it.sec > 0 }
+            for (set in 1..block.sets) {
+                val isLastSet = bi == blocks.lastIndex && set == block.sets
+                // In the very last set, drop trailing rest stages.
+                val run = if (isLastSet) steps.dropLastWhile { it.rest } else steps
+                run.forEach { st ->
+                    stages += Stage(
+                        type = if (st.rest) StageType.REST else StageType.WORK,
+                        durationSec = st.sec,
+                        name = st.name.ifBlank { if (st.rest) "Rest" else "Work" },
+                        block = bi + 1, blockCount = blocks.size, blockName = block.name,
+                        set = set, setCount = block.sets,
+                    )
                 }
             }
         }

@@ -1,6 +1,6 @@
 package com.amiteze.intervaltimer.timer
 
-/** The kind of stage; the run screen picks its color and label from this. */
+/** The kind of stage; the run screen picks its color from this. */
 enum class StageType(val label: String) {
     START("Start"),
     WORK("Work"),
@@ -10,15 +10,18 @@ enum class StageType(val label: String) {
 
 /**
  * One continuous countdown in a workout.
- * [block] and [round] are 1-based; they are 0 for Start and End stages.
+ * [name] is what the run screen shows (e.g. "Jab-cross").
+ * [block] and [set] are 1-based; they are 0 for Start and End stages.
  */
 data class Stage(
     val type: StageType,
     val durationSec: Int,
+    val name: String = type.label,
     val block: Int = 0,
     val blockCount: Int = 0,
-    val round: Int = 0,
-    val roundCount: Int = 0,
+    val blockName: String = "",
+    val set: Int = 0,
+    val setCount: Int = 0,
 ) {
     val durationMs: Long get() = durationSec * 1000L
 }
@@ -27,4 +30,13 @@ data class Stage(
 fun formatMmSs(ms: Long): String {
     val totalSec = ((ms.coerceAtLeast(0) + 999) / 1000)
     return "%02d:%02d".format(totalSec / 60, totalSec % 60)
+}
+
+/** e.g. "Set 3/5 · Boxing 1/2", or "" for Start/End. */
+fun Stage.progressText(): String {
+    if (set == 0) return ""
+    val block = if (blockCount > 1 || blockName.isNotBlank()) {
+        " · " + blockName.ifBlank { "Block" } + if (blockCount > 1) " $block/$blockCount" else ""
+    } else ""
+    return "Set $set/$setCount$block"
 }
