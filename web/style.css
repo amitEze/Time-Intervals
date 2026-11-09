@@ -1,0 +1,95 @@
+/* Colors: change the stage colors here. */
+:root {
+  --start: #1e88e5; /* blue */
+  --work: #e53935;  /* red */
+  --rest: #43a047;  /* green */
+  --end: #8e24aa;   /* purple */
+  --done: #37474f;  /* grey */
+  --bg: #f6f6f8;
+  --card: #ffffff;
+  --text: #1b1b1f;
+  --muted: #5f6368;
+  --line: #d0d0d7;
+  --accent: #e53935;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #121212; --card: #1e1e22; --text: #ececf0; --muted: #a0a0aa; --line: #3a3a42; }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.4 system-ui, -apple-system, Roboto, sans-serif; }
+#app { max-width: 640px; margin: 0 auto; min-height: 100dvh; }
+.hidden { display: none !important; }
+
+header {
+  position: sticky; top: 0; z-index: 2; background: var(--bg);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: calc(env(safe-area-inset-top) + 8px) 16px 8px;
+}
+header h1 { font-size: 22px; margin: 0; }
+main { padding: 8px 16px 112px; display: flex; flex-direction: column; gap: 12px; }
+
+.card { background: var(--card); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.card h2, .card h3 { margin: 0; }
+.card p { margin: 0; }
+.muted { color: var(--muted); }
+.row { display: flex; gap: 8px; }
+.row > * { flex: 1; }
+
+button {
+  font: inherit; min-height: 48px; padding: 8px 14px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--text);
+}
+button:disabled { opacity: 0.35; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+button.big { min-height: 56px; font-size: 18px; }
+button.flat { border: none; color: var(--accent); font-weight: 600; }
+.fab {
+  position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 16px);
+  background: var(--accent); color: #fff; border: none; min-height: 56px; padding: 0 22px;
+  border-radius: 16px; font-weight: 600; box-shadow: 0 4px 12px #0004;
+}
+.banner { color: #fff; border: none; font-weight: 600; text-align: left; }
+
+input[type="text"], input[type="number"] {
+  font: inherit; font-size: 22px; padding: 10px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--text); width: 100%;
+}
+input[type="number"] { width: 88px; text-align: center; }
+label.name { display: flex; flex-direction: column; gap: 4px; }
+.total { font-weight: 600; margin: 0; }
+.duration { display: flex; align-items: flex-end; gap: 8px; }
+.duration label { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); }
+.duration span { font-size: 26px; padding-bottom: 10px; }
+.stepper { display: flex; align-items: center; gap: 12px; }
+.stepper button { width: 56px; height: 56px; font-size: 26px; padding: 0; }
+.stepper span { font-size: 28px; min-width: 48px; text-align: center; }
+.switch-row { display: flex; justify-content: space-between; align-items: center; font-weight: 600; min-height: 48px; }
+.switch-row input { width: 28px; height: 28px; accent-color: var(--accent); }
+
+/* Run screen */
+.run {
+  min-height: 100dvh; color: #fff; text-align: center; display: flex; flex-direction: column;
+  padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
+}
+.run p { margin: 0; }
+.run-name { font-size: 16px; opacity: 0.9; }
+.run-stage { font-size: 44px; font-weight: 700; margin-top: 16px !important; }
+.run-round { font-size: 20px; white-space: pre; }
+.run-time {
+  font: 700 clamp(72px, 26vw, 160px)/1 ui-monospace, "Roboto Mono", monospace;
+  margin: auto 0 8px !important; font-variant-numeric: tabular-nums;
+}
+.run-total { font-size: 22px; }
+.run-next { font-size: 18px; opacity: 0.8; margin-bottom: auto !important; }
+.run-controls { display: flex; flex-direction: column; gap: 8px; }
+.run-controls button { background: #fff; color: #000; border: none; min-height: 72px; font-size: 18px; }
+.run-controls button.wide { flex: 1.4; font-size: 20px; }
+.run-controls button.ghost { background: transparent; color: #fff; border: 1px solid #fffa; min-height: 56px; }
+#r-close { background: #fff; color: #000; border: none; }
+.stage-START { background: var(--start); }
+.stage-WORK { background: var(--work); }
+.stage-REST { background: var(--rest); }
+.stage-END { background: var(--end); }
+.stage-DONE { background: var(--done); }
