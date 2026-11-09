@@ -58,6 +58,13 @@ jobs:
             echo "Using the committed keystore"
           fi
 
+      # Downloads Gradle itself; retried because the download server
+      # sometimes times out.
+      - name: Download Gradle
+        run: |
+          for i in 1 2 3 4; do ./gradlew --no-daemon --version && exit 0; sleep $((i * 15)); done
+          exit 1
+
       - name: Run unit tests
         run: ./gradlew --no-daemon testDebugUnitTest
 
