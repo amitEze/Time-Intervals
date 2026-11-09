@@ -1,0 +1,86 @@
+# Builds the Interval Timer APK on every push.
+# - Push to main: publishes a GitHub Release "v1.0.<build number>" with the APK.
+# - Push to any other branch: same, but marked as a pre-release.
+# The APK is also attached to each run as a downloadable artifact.
+name: Build APK
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write # needed to create releases
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Build number = run number + 10, so it is always higher than the
+      # builds made before the project moved to this repo (they went up to 2).
+      - name: Set version
+        run: |
+          BUILD=$(( ${{ github.run_number }} + 10 ))
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
+          echo "VERSION=1.0.$BUILD" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # Optional: if you added the SIGNING_* secrets (see README), sign with them.
+      # Otherwise the key committed in keystore/ is used.
+      - name: Load signing key from secrets (optional)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            {
+              echo "SIGNING_STORE_FILE=$RUNNER_TEMP/release.jks"
+              echo "SIGNING_STORE_PASSWORD=$STORE_PASSWORD"
+              echo "SIGNING_KEY_ALIAS=$KEY_ALIAS"
+              echo "SIGNING_KEY_PASSWORD=$KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+            echo "Using signing key from GitHub Secrets"
+          else
+            echo "Using the committed keystore"
+          fi
+
+      - name: Run unit tests
+        run: ./gradlew --no-daemon testDebugUnitTest
+
+      - name: Build release APK
+        run: ./gradlew --no-daemon assembleRelease -PversionCode=$BUILD
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/release/app-release.apk "IntervalTimer-$VERSION.apk"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: IntervalTimer-${{ env.VERSION }}
+          path: IntervalTimer-${{ env.VERSION }}.apk
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PRE=""
+          if [ "$GITHUB_REF_NAME" != "main" ]; then PRE="--prerelease"; fi
+          gh release create "v$VERSION" "IntervalTimer-$VERSION.apk" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Interval Timer $VERSION" \
+            --notes "Built from \`${GITHUB_SHA::7}\` on \`$GITHUB_REF_NAME\`. Download the .apk below on your phone and open it to install." \
+            $PRE
