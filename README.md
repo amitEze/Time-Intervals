@@ -14,7 +14,7 @@ A simple interval timer for workouts. No accounts, no internet, no ads.
   - **End** (cool-down, optional)
 - Rest stages at the very end of the last set of the last block are skipped.
 - Create, edit, copy and delete workouts; add, remove and reorder (↑/↓) blocks and stages.
-- **Run screen**: big MM:SS countdown, stage (Start / Work / Rest / End) with its
+- **Run screen**: big MM:SS countdown, the stage name (Start, your stage names, End) with its
   own color, "Set 3/5 · Circuit 2/3", total time left, and what comes next.
   Buttons: Prev, Pause/Resume, Skip, Stop. The screen stays on while running.
 - **Sound**: short beep at 5-4-3-2-1 seconds, a longer, higher tone when a new stage
@@ -94,6 +94,7 @@ Each run also has the APK as a downloadable **artifact** (at the bottom of the r
 | `app/src/main/java/.../ui/StageColors.kt` | Run screen colors |
 | `app/src/main/java/.../ui/RunScreen.kt` | Run screen layout |
 | `app/src/main/java/.../ui/EditorScreen.kt` | Workout editor |
+| `app/src/main/java/.../ui/BlockEditor.kt` | Block editor: sets and stages |
 | `app/src/main/java/.../data/Storage.kt` | Saving workouts and settings, example workouts |
 | `app/src/test/...` | Unit tests (run in CI before every build) |
 | `.github/workflows/android.yml` | The APK build + release workflow |
