@@ -1,35 +1,59 @@
 // Run with: node --test web/test/*.test.js   (CI runs this before every deploy)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildStages, totalSec, formatMmSs } from '../js/stages.js';
+import { buildStages, totalSec, formatMmSs, progressText } from '../js/stages.js';
 import { TimerEngine } from '../js/engine.js';
+
+const work = (name, sec) => ({ name, sec, rest: false });
+const rest = (sec) => ({ name: 'Rest', sec, rest: true });
 
 const twoBlocks = {
   warmupEnabled: true, warmupSec: 60,
-  blocks: [{ workSec: 180, restSec: 60, rounds: 5 }, { workSec: 30, restSec: 15, rounds: 8 }],
+  blocks: [
+    { name: 'Boxing', sets: 5, stages: [work('Fight', 180), rest(60)] },
+    { name: 'Circuit', sets: 2, stages: [work('Squats', 30), work('Push-ups', 20), rest(15)] },
+  ],
   cooldownEnabled: true, cooldownSec: 120,
 };
 
 test('builds stages in order and keeps rest between blocks', () => {
   const s = buildStages(twoBlocks);
-  assert.equal(s.length, 1 + 10 + 15 + 1);
+  assert.equal(s.length, 1 + 10 + 5 + 1);
   assert.equal(s[0].type, 'START');
-  assert.deepEqual(s[10], { type: 'REST', durationSec: 60, block: 1, blockCount: 2, round: 5, roundCount: 5 });
+  assert.deepEqual(s[1], { type: 'WORK', durationSec: 180, name: 'Fight', block: 1, blockCount: 2, blockName: 'Boxing', set: 1, setCount: 5 });
+  assert.deepEqual(s[10], { type: 'REST', durationSec: 60, name: 'Rest', block: 1, blockCount: 2, blockName: 'Boxing', set: 5, setCount: 5 });
+  assert.deepEqual(s.slice(11, 16).map((x) => x.name), ['Squats', 'Push-ups', 'Rest', 'Squats', 'Push-ups']);
   assert.equal(s.at(-1).type, 'END');
 });
 
-test('skips the rest after the last round of the last block', () => {
-  const s = buildStages(twoBlocks);
-  assert.deepEqual(s.at(-2), { type: 'WORK', durationSec: 30, block: 2, blockCount: 2, round: 8, roundCount: 8 });
+test('only trailing rests of the very last set are skipped', () => {
+  const w = { blocks: [{ name: '', sets: 2, stages: [rest(5), work('A', 10), rest(5), rest(3)] }] };
+  assert.deepEqual(buildStages(w).map((x) => x.name + x.durationSec), ['Rest5', 'A10', 'Rest5', 'Rest3', 'Rest5', 'A10']);
 });
 
-test('disabled or zero-length stages are left out', () => {
-  const w = { warmupEnabled: false, warmupSec: 60, blocks: [{ workSec: 20, restSec: 0, rounds: 3 }], cooldownEnabled: true, cooldownSec: 0 };
-  assert.deepEqual(buildStages(w).map((x) => x.type), ['WORK', 'WORK', 'WORK']);
+test('disabled, empty or zero-length stages are left out; blank names get a default', () => {
+  const w = {
+    warmupEnabled: false, warmupSec: 60, cooldownEnabled: true, cooldownSec: 0,
+    blocks: [
+      { name: '', sets: 3, stages: [work(' ', 20), rest(0)] },
+      { name: '', sets: 4, stages: [work('Nothing', 0)] },
+    ],
+  };
+  const s = buildStages(w);
+  assert.deepEqual(s.map((x) => x.name), ['Work', 'Work', 'Work']);
+  assert.equal(s[0].blockCount, 1);
+});
+
+test('progress text', () => {
+  const s = buildStages(twoBlocks);
+  assert.equal(progressText(s[0]), '');
+  assert.equal(progressText(s[1]), 'Set 1/5 · Boxing 1/2');
+  const single = buildStages({ blocks: [{ name: '', sets: 3, stages: [work('A', 5)] }] });
+  assert.equal(progressText(single[0]), 'Set 1/3');
 });
 
 test('total and formatting', () => {
-  assert.equal(totalSec(twoBlocks), 60 + 900 + 300 + 240 + 105 + 120);
+  assert.equal(totalSec(twoBlocks), 60 + 1200 + 65 + 50 + 120);
   assert.equal(formatMmSs(180000), '03:00');
   assert.equal(formatMmSs(4001), '00:05');
   assert.equal(formatMmSs(1), '00:01');

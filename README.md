@@ -6,13 +6,16 @@ A simple interval timer for workouts. No accounts, no internet, no ads.
 
 - **Workouts** are a named sequence of:
   - **Start** (warm-up, optional)
-  - one or more **blocks**, each with *work*, *rest* and *rounds*, run in order
-    (for example "5 × 3:00 work / 1:00 rest", then "8 × 0:30 / 0:15")
+  - one or more **blocks**, run in order. Each block has an optional name, a
+    number of **sets**, and any number of **stages** with their own name,
+    duration and type (**Work** = red, **Rest** = green). Every set runs the
+    block's stages in order. For example "Circuit: 3 sets of Squats 0:40,
+    Push-ups 0:40, Plank 0:40, Rest 1:00".
   - **End** (cool-down, optional)
-- The rest after the very last round of the last block is skipped.
-- Create, edit, copy and delete workouts; add, remove and reorder (↑/↓) blocks.
+- Rest stages at the very end of the last set of the last block are skipped.
+- Create, edit, copy and delete workouts; add, remove and reorder (↑/↓) blocks and stages.
 - **Run screen**: big MM:SS countdown, stage (Start / Work / Rest / End) with its
-  own color, round "3/5", block "2/3", total time left, and what comes next.
+  own color, "Set 3/5 · Circuit 2/3", total time left, and what comes next.
   Buttons: Prev, Pause/Resume, Skip, Stop. The screen stays on while running.
 - **Sound**: short beep at 5-4-3-2-1 seconds, a longer, higher tone when a new stage
   starts. Music (Spotify, YouTube Music, ...) only gets quieter for the beep and keeps playing.

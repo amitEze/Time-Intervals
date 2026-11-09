@@ -52,7 +52,7 @@ const actions = {
   copy: (d) => {
     const w = find(d.id);
     const c = { ...structuredClone(w), id: store.newId(), name: `${w.name} (copy)` };
-    c.blocks = c.blocks.map((b) => ({ ...b, id: store.newId() }));
+    c.blocks = c.blocks.map(store.copyBlock);
     state.workouts.splice(state.workouts.indexOf(w) + 1, 0, c);
     saveAll(); show('list');
   },
@@ -72,6 +72,7 @@ const actions = {
   save: () => {
     const w = state.draft;
     w.name = w.name.trim() || 'Workout';
+    w.blocks.forEach((b) => { b.name = b.name.trim(); });
     const i = state.workouts.findIndex((x) => x.id === w.id);
     if (i >= 0) state.workouts[i] = w; else state.workouts.push(w);
     saveAll(); state.draft = null; go('list');
@@ -79,14 +80,34 @@ const actions = {
   toggle: (d, el) => { state.draft[d.key] = el.checked; redrawEditor(); },
   'add-block': () => {
     const last = state.draft.blocks.at(-1);
-    state.draft.blocks.push(store.newBlock(last ? { workSec: last.workSec, restSec: last.restSec, rounds: last.rounds } : {}));
+    state.draft.blocks.push(last ? store.copyBlock(last) : store.newBlock());
     redrawEditor();
   },
-  rounds: (d) => {
+  sets: (d) => {
     const b = state.draft.blocks[+d.i];
-    b.rounds = Math.min(99, Math.max(1, b.rounds + +d.d));
+    b.sets = Math.min(99, Math.max(1, b.sets + +d.d));
     redrawEditor();
   },
+  // Stages inside a block
+  'add-stage': (d) => {
+    const stages = state.draft.blocks[+d.i].stages;
+    const last = stages.at(-1);
+    // Rest after work, work after rest.
+    stages.push(!last || last.rest ? store.newStage('Work', 30) : store.newStage('Rest', 15, true));
+    redrawEditor();
+  },
+  'stage-kind': (d) => {
+    const st = state.draft.blocks[+d.i].stages[+d.j];
+    st.rest = !st.rest;
+    redrawEditor();
+  },
+  'stage-move': (d) => {
+    const ss = state.draft.blocks[+d.i].stages, j = +d.j, k = j + +d.d;
+    if (k < 0 || k >= ss.length) return;
+    [ss[j], ss[k]] = [ss[k], ss[j]];
+    redrawEditor();
+  },
+  'stage-remove': (d) => { state.draft.blocks[+d.i].stages.splice(+d.j, 1); redrawEditor(); },
   move: (d) => {
     const bs = state.draft.blocks, i = +d.i, j = i + +d.d;
     if (j < 0 || j >= bs.length) return;
@@ -128,10 +149,10 @@ app.addEventListener('change', (ev) => {
 app.addEventListener('input', (ev) => {
   const el = ev.target, field = el.dataset.field;
   if (!field || !state.draft) return;
-  if (field === 'name') { state.draft.name = el.value; return; }
-  const path = field.split('.'); // e.g. "blocks.0.workSec" or "warmupSec"
+  const path = field.split('.'); // e.g. "name", "warmupSec", "blocks.0.stages.1.sec"
   const key = path.pop();
   const obj = path.reduce((o, p) => o[p], state.draft);
+  if (el.type === 'text') { obj[key] = el.value; return; }
   const n = Math.min(Number(el.max), Math.max(0, parseInt(el.value, 10) || 0));
   obj[key] = el.dataset.part === 'min' ? n * 60 + (obj[key] % 60) : Math.floor(obj[key] / 60) * 60 + n;
   document.getElementById('total').textContent = formatMmSs(totalSec(state.draft) * 1000);

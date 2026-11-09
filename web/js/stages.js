@@ -1,32 +1,55 @@
 // Turns a workout into the flat list of stages the timer runs.
 // Same rules as the Android app (StageBuilder.kt):
 // - Start/End only when enabled and longer than 0 s.
-// - Each block adds Work (and Rest) for every round.
-// - The rest after the very last round of the last block is skipped.
+// - Each block runs all its stages, in order, once per set.
+// - Rest stages at the very end of the last set of the last block are skipped.
 // - Stages of 0 s are skipped.
 
 export const STAGE_LABEL = { START: 'Start', WORK: 'Work', REST: 'Rest', END: 'End' };
 
 export function buildStages(w) {
   const stages = [];
-  if (w.warmupEnabled && w.warmupSec > 0) stages.push(stage('START', w.warmupSec));
+  if (w.warmupEnabled && w.warmupSec > 0) stages.push(plain('START', w.warmupSec));
 
-  const blocks = w.blocks.filter((b) => b.rounds > 0);
+  const blocks = w.blocks.filter((b) => b.sets > 0 && b.stages.some((s) => s.sec > 0));
   blocks.forEach((b, bi) => {
-    for (let r = 1; r <= b.rounds; r++) {
-      const lastOfAll = bi === blocks.length - 1 && r === b.rounds;
-      const info = { block: bi + 1, blockCount: blocks.length, round: r, roundCount: b.rounds };
-      if (b.workSec > 0) stages.push(stage('WORK', b.workSec, info));
-      if (!lastOfAll && b.restSec > 0) stages.push(stage('REST', b.restSec, info));
+    const steps = b.stages.filter((s) => s.sec > 0);
+    for (let set = 1; set <= b.sets; set++) {
+      let run = steps;
+      if (bi === blocks.length - 1 && set === b.sets) {
+        // In the very last set, drop trailing rest stages.
+        let end = steps.length;
+        while (end > 0 && steps[end - 1].rest) end--;
+        run = steps.slice(0, end);
+      }
+      for (const st of run) {
+        stages.push({
+          type: st.rest ? 'REST' : 'WORK',
+          durationSec: st.sec,
+          name: st.name.trim() || (st.rest ? 'Rest' : 'Work'),
+          block: bi + 1, blockCount: blocks.length, blockName: b.name ?? '',
+          set, setCount: b.sets,
+        });
+      }
     }
   });
 
-  if (w.cooldownEnabled && w.cooldownSec > 0) stages.push(stage('END', w.cooldownSec));
+  if (w.cooldownEnabled && w.cooldownSec > 0) stages.push(plain('END', w.cooldownSec));
   return stages;
 }
 
-function stage(type, durationSec, info = { block: 0, blockCount: 0, round: 0, roundCount: 0 }) {
-  return { type, durationSec, ...info };
+function plain(type, durationSec) {
+  return { type, durationSec, name: STAGE_LABEL[type], block: 0, blockCount: 0, blockName: '', set: 0, setCount: 0 };
+}
+
+// e.g. "Set 3/5 · Boxing 1/2", or "" for Start/End.
+export function progressText(s) {
+  if (!s.set) return '';
+  let block = '';
+  if (s.blockCount > 1 || s.blockName.trim()) {
+    block = ' · ' + (s.blockName.trim() || 'Block') + (s.blockCount > 1 ? ` ${s.block}/${s.blockCount}` : '');
+  }
+  return `Set ${s.set}/${s.setCount}${block}`;
 }
 
 export function totalSec(w) {

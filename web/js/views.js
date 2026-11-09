@@ -1,11 +1,13 @@
 // HTML for each screen. Buttons use data-action="..." (handled in app.js);
 // inputs use data-field="..." to say which workout value they edit.
-import { STAGE_LABEL, totalSec, formatMmSs } from './stages.js';
+import { totalSec, formatMmSs, progressText } from './stages.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const t = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+// e.g. "5× (Fight 3:00, Rest 1:00) · total 29:45"
 const summary = (w) =>
-  w.blocks.map((b) => `${b.rounds}×${t(b.workSec)}/${t(b.restSec)}`).join(', ') + ` · total ${formatMmSs(totalSec(w) * 1000)}`;
+  w.blocks.map((b) => `${b.sets}× (` + b.stages.map((s) => `${s.name || (s.rest ? 'Rest' : 'Work')} ${t(s.sec)}`).join(', ') + ')').join(', ') +
+  ` · total ${formatMmSs(totalSec(w) * 1000)}`;
 
 export function listView(workouts, run) {
   const banner = run
@@ -44,22 +46,41 @@ function optional(title, key, enabled, sec) {
     </div>`;
 }
 
+// One stage inside a block: name, Work/Rest switch (sets the color), duration.
+function stageCard(st, i, j, count) {
+  return `
+    <div class="stage-card ${st.rest ? 'is-rest' : 'is-work'}">
+      <div class="stage-top">
+        <label class="name">Stage ${j + 1} name<input type="text" data-field="blocks.${i}.stages.${j}.name" value="${esc(st.name)}"></label>
+        <button class="kind" data-action="stage-kind" data-i="${i}" data-j="${j}">${st.rest ? 'Rest' : 'Work'}</button>
+      </div>
+      ${duration(`blocks.${i}.stages.${j}.sec`, st.sec)}
+      <div class="row">
+        <button data-action="stage-move" data-i="${i}" data-j="${j}" data-d="-1" ${j === 0 ? 'disabled' : ''}>↑</button>
+        <button data-action="stage-move" data-i="${i}" data-j="${j}" data-d="1" ${j === count - 1 ? 'disabled' : ''}>↓</button>
+        <button data-action="stage-remove" data-i="${i}" data-j="${j}" ${count === 1 ? 'disabled' : ''}>Remove</button>
+      </div>
+    </div>`;
+}
+
 export function editView(w) {
   const blocks = w.blocks.map((b, i) => `
     <div class="card">
       <h3>Block ${i + 1}</h3>
-      <p>Work</p>${duration(`blocks.${i}.workSec`, b.workSec)}
-      <p>Rest</p>${duration(`blocks.${i}.restSec`, b.restSec)}
-      <p>Rounds</p>
+      <label class="name">Block name (optional)<input type="text" data-field="blocks.${i}.name" value="${esc(b.name)}"></label>
+      <p>Sets</p>
       <div class="stepper">
-        <button data-action="rounds" data-i="${i}" data-d="-1">−</button>
-        <span>${b.rounds}</span>
-        <button data-action="rounds" data-i="${i}" data-d="1">+</button>
+        <button data-action="sets" data-i="${i}" data-d="-1">−</button>
+        <span>${b.sets}</span>
+        <button data-action="sets" data-i="${i}" data-d="1">+</button>
       </div>
+      <p>Stages (run in order, every set)</p>
+      ${b.stages.map((st, j) => stageCard(st, i, j, b.stages.length)).join('')}
+      <button data-action="add-stage" data-i="${i}">+ Add stage</button>
       <div class="row">
         <button data-action="move" data-i="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''}>↑ Up</button>
         <button data-action="move" data-i="${i}" data-d="1" ${i === w.blocks.length - 1 ? 'disabled' : ''}>↓ Down</button>
-        <button data-action="remove" data-i="${i}" ${w.blocks.length === 1 ? 'disabled' : ''}>Remove</button>
+        <button data-action="remove" data-i="${i}" ${w.blocks.length === 1 ? 'disabled' : ''}>Remove block</button>
       </div>
     </div>`).join('');
   return `
@@ -111,12 +132,12 @@ export function updateRun(engine, now) {
     $('r-close').classList.remove('hidden');
     return;
   }
-  $('r-stage').textContent = STAGE_LABEL[s.type] + (engine.isPaused ? ' (paused)' : '');
-  $('r-round').textContent = s.round ? `Round ${s.round}/${s.roundCount}    Block ${s.block}/${s.blockCount}` : '';
+  $('r-stage').textContent = s.name + (engine.isPaused ? ' (paused)' : '');
+  $('r-round').textContent = progressText(s);
   $('r-time').textContent = formatMmSs(engine.stageRemainingMs(now));
   $('r-total').textContent = `Total left ${formatMmSs(engine.totalRemainingMs(now))}`;
   const next = engine.stages[engine.index + 1];
-  $('r-next').textContent = next ? `Next: ${STAGE_LABEL[next.type]} ${formatMmSs(next.durationSec * 1000)}` : '';
+  $('r-next').textContent = next ? `Next: ${next.name} ${formatMmSs(next.durationSec * 1000)}` : '';
   $('r-pause').textContent = engine.isPaused ? '▶ Resume' : '⏸ Pause';
 }
 

@@ -1,7 +1,7 @@
 // Service worker: lets the app open without internet.
 // Network first (so you always get the newest version when online),
 // falling back to the saved copy when offline.
-const CACHE = 'interval-timer-v1';
+const CACHE = 'interval-timer-v2';
 const FILES = [
   './', 'index.html', 'style.css', 'manifest.webmanifest',
   'js/app.js', 'js/views.js', 'js/engine.js', 'js/stages.js', 'js/storage.js', 'js/sound.js',
