@@ -20,6 +20,26 @@ A simple interval timer for workouts. No accounts, no internet, no ads.
 - Keeps running with the **screen off or the app in the background**: an ongoing
   notification shows the stage and seconds left, with Pause and Stop buttons.
 
+## Web app (any phone, no install file)
+
+There is also a web version: **<https://amiteze.github.io/Time-Intervals/>**
+
+- Open it in Chrome (Android) or Safari (iPhone). To get an app icon:
+  Chrome **⋮ → Add to Home screen / Install app**; Safari **Share → Add to Home Screen**.
+  After the first visit it also works offline.
+- Same workouts editor, run screen, colors, beeps and vibration as the Android app.
+  Workouts are saved in that browser only (not shared with the Android app).
+- **Keep the screen on and the page open while training.** The page keeps
+  the screen awake by itself. Browsers pause web pages when the screen is off
+  or you switch apps, so beeps and vibration can stop then. If you need the
+  timer to run with the screen off, use the Android app.
+- Beeps play on top of your music, but browsers can't make the music quieter
+  for a moment like the Android app does.
+- Vibration works on Android only (iPhones don't allow it for websites).
+- The code is in `web/` (plain HTML, CSS and JavaScript, no build step).
+  Every push to `main` that changes `web/` publishes it again in about a minute
+  (Actions tab → "Deploy web app"). Changes only in `web/` don't build a new APK.
+
 ## Install the APK on your phone
 
 1. On your phone, open this repo's **Releases** page:
@@ -73,7 +93,10 @@ Each run also has the APK as a downloadable **artifact** (at the bottom of the r
 | `app/src/main/java/.../ui/EditorScreen.kt` | Workout editor |
 | `app/src/main/java/.../data/Storage.kt` | Saving workouts and settings, example workouts |
 | `app/src/test/...` | Unit tests (run in CI before every build) |
-| `.github/workflows/android.yml` | The build + release workflow |
+| `.github/workflows/android.yml` | The APK build + release workflow |
+| `web/js/*.js` | Web app: `engine.js`/`stages.js` timer logic, `views.js` screens, `sound.js` beeps |
+| `web/style.css` | Web app colors and layout |
+| `.github/workflows/web.yml` | Publishes the web app to GitHub Pages |
 
 ## How to ask Claude Code to change things
 

@@ -6,6 +6,8 @@ name: Build APK
 
 on:
   push:
+    # Changes to only the web app don't need a new APK.
+    paths-ignore: ['web/**', '.github/workflows/web.yml']
   workflow_dispatch:
 
 permissions:
